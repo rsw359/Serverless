@@ -4,35 +4,35 @@ import requests
 
 
 class handler(BaseHTTPRequestHandler):
-
-    # https://restcountries.com/v3.1/name/peru
-
     def do_GET(self):
-        url_components = parse.urlsplit(self.path)
-        query_list = parse.parse_qsl(url_components.query) # returns list, ['name', 'peru']
-        dictionary = dict(query_list)  # turns list into dict
+        path = self.path
+        url_components = parse.urlsplit(path)
+        query_string_list = parse.parse_qsl(url_components.query)
+        dictionary = dict(query_string_list)
 
-        if 'name' in dictionary:
-            query = dictionary['name']
+        if "name" in dictionary:
             url = "https://restcountries.com/v3.1/name/"
-            complete_url = url + dictionary['name']
-            # print(complete_url + ' this is your URL')
-            response = requests.get(complete_url)
-            data = response.json()
-            capital = data[0]['capital'] # index's to the capital city.
+            request = requests.get(url + dictionary["name"])
+            data = request.json()
 
-            # print(capital + " this is your capital")
-            message = str(capital[0])
-            final = f'the capital of {query} is {message}'
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(final.encode())
+            country_name = str(data[0]["name"]['common'])
+            capital_name = str(data[0]["capital"][0])
+            message = f"The capital of {country_name} is {capital_name}"
+        elif "capital" in dictionary:
+            url = "https://restcountries.com/v3.1/capital/"
+            request = requests.get(url + dictionary["capital"])
+            data = request.json()
+
+            country_name = str(data[0]["name"]['common'])
+            capital_name = str(data[0]["capital"][0])
+            message = f"{capital_name} is the capital of {country_name}"
 
         else:
-            message = "Type a country in the query to get its capital city."
+            message = "Please enter a country name"
 
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(message.encode())
+
         return
